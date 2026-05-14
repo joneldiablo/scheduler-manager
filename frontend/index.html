@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Alchemist - Scheduler Manager</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/style.css" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark border-bottom border-secondary px-3" v-if="isAuthenticated">
+      <button class="btn btn-outline-light border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="navbar-brand mb-0 h1 ms-2">
+        <i class="bi bi-alarm"></i> The Alchemist
+      </span>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary btn-sm" @click="toggleDebug">
+          <i class="bi bi-bug"></i>
+        </button>
+        <button class="btn btn-outline-danger btn-sm" @click="logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Offcanvas Navigation -->
+    <div class="offcanvas offcanvas-start bg-dark text-light border-secondary" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+      <div class="offcanvas-header border-bottom border-secondary">
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">
+          <i class="bi bi-gear-wide-connected"></i> Menú
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body p-0">
+        <div class="list-group list-group-flush">
+          <a href="#" class="list-group-item list-group-item-action bg-dark text-light border-secondary py-3" 
+             :class="{ active: activeView === 'dashboard' }" @click.prevent="navigateTo('dashboard')">
+            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+          </a>
+          <a href="#" class="list-group-item list-group-item-action bg-dark text-light border-secondary py-3" 
+             :class="{ active: activeView === 'tasks' }" @click.prevent="navigateTo('tasks')">
+            <i class="bi bi-list-task me-2"></i> Tareas
+          </a>
+          <a href="#" class="list-group-item list-group-item-action bg-dark text-light border-secondary py-3" 
+             :class="{ active: activeView === 'scheduler' }" @click.prevent="navigateTo('scheduler')">
+            <i class="bi bi-calendar-event me-2"></i> Planificador
+          </a>
+        </div>
+        <div class="mt-auto p-3 border-top border-secondary">
+          <div class="d-flex align-items-center gap-2 small text-secondary">
+            <i class="bi bi-person-circle"></i> {{ user?.username }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Debug Bar -->
+    <div class="debug-bar bg-dark text-warning small p-1 px-3 border-bottom border-secondary" v-if="urlHasDebug" style="display:none">
+      <span id="log-badge" class="badge bg-danger me-2" style="display:none">0</span>
+      <button class="btn btn-sm btn-outline-warning me-2" onclick="window.__openLogModal()">
+        <i class="bi bi-terminal"></i> Logs
+      </button>
+      <button class="btn btn-sm btn-outline-info me-2" onclick="window.__showCacheInfo()">
+        <i class="bi bi-database"></i> Cache
+      </button>
+      <button class="btn btn-sm btn-outline-danger" onclick="window.__clearCache()">
+        <i class="bi bi-trash"></i> Clear Cache
+      </button>
+    </div>
+
+    <!-- Fragment Templates (hidden, loaded once at startup) -->
+    <template id="tpl-dashboard"></template>
+    <template id="tpl-tasks"></template>
+    <template id="tpl-scheduler"></template>
+
+    <!-- Main Content -->
+    <div class="container-fluid p-3" v-if="isAuthenticated">
+      <component :is="viewComponent" />
+    </div>
+
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title"><i class="bi bi-shield-lock"></i> The Alchemist</h5>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-danger small py-2" v-if="loginError" v-text="loginError"></div>
+            <form @submit.prevent="login">
+              <div class="mb-3">
+                <label class="form-label small">Usuario</label>
+                <input type="text" class="form-control form-control-sm" v-model="loginForm.username" autocomplete="username" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small">Contraseña</label>
+                <input type="password" class="form-control form-control-sm" v-model="loginForm.password" autocomplete="current-password" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100" :disabled="loading">
+                <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
+                Ingresar
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log Modal -->
+    <div class="modal fade" id="logModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content bg-dark border-secondary">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title">Consola de Depuración</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="log-list" style="font-family:monospace;font-size:12px;background:#000;padding:8px;border-radius:4px;min-height:300px;max-height:500px;overflow-y:auto"></div>
+            <div id="cache-info" class="mt-2 small text-info" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CDN Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- App Scripts -->
+  <script src="assets/endpoint-config.js"></script>
+  <script type="module" src="assets/app-state.js"></script>
+  <script type="module" src="assets/app-computed.js"></script>
+  <script type="module" src="assets/app-methods-auth.js"></script>
+  <script type="module" src="assets/app-methods-ui.js"></script>
+  <script type="module" src="assets/app-methods-tasks.js"></script>
+  <script type="module" src="assets/app-methods-scheduler.js"></script>
+  <script type="module" src="assets/script.js"></script>
+</body>
+</html>

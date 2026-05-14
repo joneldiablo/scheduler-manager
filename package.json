@@ -1,0 +1,15 @@
+{
+  "name": "scheduler-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Alchemist - Agnostic Task Scheduler Orchestrator",
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run serve -w backend",
+    "serve": "npm run serve -w backend",
+    "typecheck": "npm run typecheck -w backend",
+    "test": "npm run test -w backend"
+  }
+}

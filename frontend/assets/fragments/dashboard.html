@@ -1,0 +1,56 @@
+<div class="mb-4">
+  <h4 class="mb-0"><i class="bi bi-speedometer2"></i> Panel de Control</h4>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card bg-dark border-secondary text-center p-3">
+      <div class="text-secondary small mb-1">Total Tareas</div>
+      <div class="h3 mb-0">{{ $root.tasksTotal || 0 }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card bg-dark border-secondary text-center p-3">
+      <div class="text-secondary small mb-1">Activas</div>
+      <div class="h3 mb-0 text-success">{{ $root.stats?.active || 0 }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card bg-dark border-secondary text-center p-3">
+      <div class="text-secondary small mb-1">Pendientes</div>
+      <div class="h3 mb-0 text-warning">{{ $root.stats?.pending || 0 }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card bg-dark border-secondary text-center p-3">
+      <div class="text-secondary small mb-1">Ejecutadas</div>
+      <div class="h3 mb-0 text-info">{{ $root.stats?.fired || 0 }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card bg-dark border-secondary">
+  <div class="card-header border-secondary bg-dark d-flex justify-content-between align-items-center">
+    <h6 class="mb-0">Actividad Reciente</h6>
+    <button class="btn btn-sm btn-outline-secondary" @click="$root.navigateTo('tasks')">Ver todas</button>
+  </div>
+  <div class="card-body p-0">
+    <div class="list-group list-group-flush">
+      <div class="list-group-item bg-dark text-light border-secondary p-3" v-for="task in ($root.tasks || []).slice(0, 5)" :key="task.id">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <span class="fw-bold">{{ task?.label || 'Sin nombre' }}</span>
+            <div class="small text-secondary">{{ task?.description || 'Sin descripción' }}</div>
+          </div>
+          <span class="badge bg-secondary">{{ task?.active ? 'Activa' : 'Inactiva' }}</span>
+        </div>
+      </div>
+      <div class="p-3 text-center text-secondary small" v-if="$root.tasks && $root.tasks.length === 0">
+        No hay actividad reciente
+      </div>
+      <div class="p-3 text-center" v-else-if="!$root.tasks">
+        <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+      </div>
+    </div>
+  </div>
+</div>

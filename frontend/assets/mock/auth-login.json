@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "error": false,
+  "status": 200,
+  "code": 0,
+  "description": "ok",
+  "data": {
+    "token": "mock-jwt-token-12345",
+    "user": {
+      "username": "admin",
+      "role": "superadmin"
+    }
+  }
+}

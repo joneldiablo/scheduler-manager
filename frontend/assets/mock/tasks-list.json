@@ -1,0 +1,78 @@
+{
+  "success": true,
+  "error": false,
+  "status": 200,
+  "code": 0,
+  "description": "ok",
+  "data": {
+    "tasks": [
+      {
+        "id": 1,
+        "name": "daily-report",
+        "label": "Reporte Diario",
+        "description": "Genera y envía el reporte diario de operaciones",
+        "schedule_datetime": "2025-01-15 08:00:00",
+        "recursive_timestamp": 86400000,
+        "expiration_datetime": null,
+        "times_total": 0,
+        "times_called": 42,
+        "last_ejecution_datetime": "2025-01-14 08:00:00",
+        "script": "http://localhost:4000/reports/daily",
+        "active": true,
+        "updated_at": "2025-01-01 00:00:00",
+        "created_at": "2024-06-01 00:00:00"
+      },
+      {
+        "id": 2,
+        "name": "cleanup-temp",
+        "label": "Limpieza Temporal",
+        "description": "Elimina archivos temporales del servidor",
+        "schedule_datetime": "2025-12-31 23:00:00",
+        "recursive_timestamp": 3600000,
+        "expiration_datetime": "2026-01-01 00:00:00",
+        "times_total": 1000,
+        "times_called": 500,
+        "last_ejecution_datetime": "2025-01-14 22:00:00",
+        "script": "/scripts/cleanup.sh",
+        "active": true,
+        "updated_at": "2025-01-01 00:00:00",
+        "created_at": "2024-06-15 00:00:00"
+      },
+      {
+        "id": 3,
+        "name": "ping-healthcheck",
+        "label": "Healthcheck Ping",
+        "description": "Ping al servicio de healthcheck cada 5 minutos",
+        "schedule_datetime": null,
+        "recursive_timestamp": 300000,
+        "expiration_datetime": null,
+        "times_total": 0,
+        "times_called": 12345,
+        "last_ejecution_datetime": "2025-01-14 23:55:00",
+        "script": "http://localhost:4000/health/ping",
+        "active": true,
+        "updated_at": "2025-01-01 00:00:00",
+        "created_at": "2024-01-01 00:00:00"
+      },
+      {
+        "id": 4,
+        "name": "weekly-backup",
+        "label": "Backup Semanal",
+        "description": "Backup completo de la base de datos",
+        "schedule_datetime": "2025-01-19 03:00:00",
+        "recursive_timestamp": 604800000,
+        "expiration_datetime": null,
+        "times_total": 52,
+        "times_called": 33,
+        "last_ejecution_datetime": "2025-01-12 03:00:00",
+        "script": "/scripts/backup.sh",
+        "active": true,
+        "updated_at": "2025-01-01 00:00:00",
+        "created_at": "2024-01-01 00:00:00"
+      }
+    ],
+    "total": 4,
+    "page": 1,
+    "limit": 20
+  }
+}
