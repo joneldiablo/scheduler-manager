@@ -61,6 +61,8 @@ export const appMethodsUI = {
       if (this.refreshStats) await this.refreshStats();
     } else if (view === 'history') {
       if (this.refreshHistory) await this.refreshHistory();
+    } else if (view === 'docs') {
+      // no data to load
     }
   },
 
@@ -97,7 +99,7 @@ export const appMethodsUI = {
 
 
   async loadAllFragments() {
-    const views = ['dashboard', 'tasks', 'scheduler', 'history'];
+    const views = ['dashboard', 'tasks', 'scheduler', 'history', 'docs'];
     await Promise.all(views.map(v => this.loadFragment(v)));
   },
 

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('The Alchemist - E2E Tests', () => {
+test.describe('Scheduler Manager - E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Clear localStorage before each test
     await page.addInitScript(() => {

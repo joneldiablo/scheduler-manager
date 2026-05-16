@@ -64,7 +64,7 @@ const app = Vue.createApp({
     ...appMethodsHistory,
   },
   async mounted() {
-    console.log("[The Alchemist] App mounted");
+    console.log("[Scheduler Manager] App mounted");
 
     // 1. Initialize Bootstrap Modals
     this.loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
@@ -79,7 +79,7 @@ const app = Vue.createApp({
     }
     if (params.get('clear') === '1') {
       localStorage.clear();
-      console.log("[The Alchemist] Cache cleared via URL");
+      console.log("[Scheduler Manager] Cache cleared via URL");
     }
 
     // 3. Session check
@@ -125,8 +125,8 @@ window.__openLogModal = () => {
 
 const fragmentHtmlStore = {};
 async function loadFragments() {
-  const fragments = ['dashboard', 'tasks', 'scheduler', 'history'];
-  console.log("[The Alchemist] Loading fragments...");
+  const fragments = ['dashboard', 'tasks', 'scheduler', 'history', 'docs'];
+  console.log("[Scheduler Manager] Loading fragments...");
   
   try {
     await Promise.all(fragments.map(async (name) => {
@@ -135,9 +135,9 @@ async function loadFragments() {
       const html = await response.text();
       fragmentHtmlStore[name] = html;
     }));
-    console.log("[The Alchemist] All fragments loaded.");
+    console.log("[Scheduler Manager] All fragments loaded.");
   } catch (e) {
-    console.error("[The Alchemist] Error loading fragments:", e);
+    console.error("[Scheduler Manager] Error loading fragments:", e);
   }
 }
 window.__fragmentStore = fragmentHtmlStore;
@@ -147,7 +147,7 @@ window.vueApp = app;
 (async function init() {
   await loadFragments();
   app.mount('#app');
-  console.log("[The Alchemist] Vue app mounted after fragment loading");
+  console.log("[Scheduler Manager] Vue app mounted after fragment loading");
 })();
 
 function renderLog() {
@@ -175,5 +175,5 @@ window.__clearCache = () => {
   console.log("Cache cleared");
 };
 
-console.log("[The Alchemist] Frontend initialized");
+console.log("[Scheduler Manager] Frontend initialized");
 

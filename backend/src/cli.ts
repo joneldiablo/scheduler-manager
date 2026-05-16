@@ -34,7 +34,7 @@ async function main() {
     const { runMigrations, seedDemoData } = await import('./database.js');
     await runMigrations(db);
     await seedDemoData(db);
-    console.log('[The Alchemist] Demo data seeded successfully.');
+    console.log('[Scheduler Manager] Demo data seeded successfully.');
     await db.destroy();
     process.exit(0);
   }
@@ -52,7 +52,7 @@ async function main() {
     const context = await createApp(config);
 
     const shutdown = async (signal: string) => {
-      console.log(`\n[The Alchemist] Received ${signal}. Shutting down...`);
+      console.log(`\n[Scheduler Manager] Received ${signal}. Shutting down...`);
       context.planner.stop();
       context.trigger.clearTimeouts();
       context.ws.close();
@@ -64,20 +64,20 @@ async function main() {
     process.on('SIGINT', () => shutdown('SIGINT'));
 
     process.on('uncaughtException', (err) => {
-      console.error('[The Alchemist] Uncaught exception:', err);
+      console.error('[Scheduler Manager] Uncaught exception:', err);
     });
     process.on('unhandledRejection', (reason) => {
-      console.error('[The Alchemist] Unhandled rejection:', reason);
+      console.error('[Scheduler Manager] Unhandled rejection:', reason);
     });
 
     context.server.listen(config.PORT, config.HOST, () => {
-      console.log(`[The Alchemist] Server running on http://${config.HOST}:${config.PORT}`);
-      console.log(`[The Alchemist] API at ${config.API_PATH_PREFIX}`);
+      console.log(`[Scheduler Manager] Server running on http://${config.HOST}:${config.PORT}`);
+      console.log(`[Scheduler Manager] API at ${config.API_PATH_PREFIX}`);
     });
   }
 }
 
 main().catch((err) => {
-  console.error('[The Alchemist] Fatal error:', err);
+  console.error('[Scheduler Manager] Fatal error:', err);
   process.exit(1);
 });

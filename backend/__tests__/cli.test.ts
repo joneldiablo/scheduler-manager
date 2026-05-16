@@ -192,10 +192,10 @@ describe('CLI', () => {
       await flushAsync();
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[The Alchemist] Server running on http://0.0.0.0:3000',
+        '[Scheduler Manager] Server running on http://0.0.0.0:3000',
       );
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[The Alchemist] API at /api',
+        '[Scheduler Manager] API at /api',
       );
     });
 
@@ -251,7 +251,7 @@ describe('CLI', () => {
       process.emit('SIGTERM');
       await flushAsync();
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('\n[The Alchemist] Received SIGTERM. Shutting down...');
+      expect(consoleLogSpy).toHaveBeenCalledWith('\n[Scheduler Manager] Received SIGTERM. Shutting down...');
       expect(processExitSpy).toHaveBeenCalledWith(0);
     });
 
@@ -281,7 +281,7 @@ describe('CLI', () => {
       process.emit('SIGINT');
       await flushAsync();
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('\n[The Alchemist] Received SIGINT. Shutting down...');
+      expect(consoleLogSpy).toHaveBeenCalledWith('\n[Scheduler Manager] Received SIGINT. Shutting down...');
       expect(processExitSpy).toHaveBeenCalledWith(0);
     });
   });
@@ -297,7 +297,7 @@ describe('CLI', () => {
       const testError = new Error('test uncaught');
       process.emit('uncaughtException', testError);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[The Alchemist] Uncaught exception:', testError);
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[Scheduler Manager] Uncaught exception:', testError);
     });
 
     it('logs unhandled rejections', async () => {
@@ -310,7 +310,7 @@ describe('CLI', () => {
       const reason = new Error('test rejection');
       process.emit('unhandledRejection', reason);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[The Alchemist] Unhandled rejection:', reason);
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[Scheduler Manager] Unhandled rejection:', reason);
     });
 
     it('handles fatal errors from main() by logging and exiting with code 1', async () => {
@@ -322,7 +322,7 @@ describe('CLI', () => {
       await flushAsync();
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[The Alchemist] Fatal error:',
+        '[Scheduler Manager] Fatal error:',
         expect.objectContaining({ message: 'SUPERUSER_USER and SUPERUSER_PASS are required.' }),
       );
       expect(processExitSpy).toHaveBeenCalledWith(1);
@@ -371,7 +371,7 @@ describe('CLI', () => {
 
       expect(mockRunMigrations).toHaveBeenCalled();
       expect(mockSeedDemoData2).toHaveBeenCalled();
-      expect(consoleLogSpy).toHaveBeenCalledWith('[The Alchemist] Demo data seeded successfully.');
+      expect(consoleLogSpy).toHaveBeenCalledWith('[Scheduler Manager] Demo data seeded successfully.');
       expect(processExitSpy).toHaveBeenCalledWith(0);
     });
 

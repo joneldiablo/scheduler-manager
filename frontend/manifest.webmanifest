@@ -1,6 +1,6 @@
 {
-  "name": "The Alchemist Scheduler",
-  "short_name": "Alchemist",
+  "name": "Scheduler Manager",
+  "short_name": "Scheduler",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#0f0f0f",

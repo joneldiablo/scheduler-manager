@@ -1,0 +1,282 @@
+<div class="container-fluid px-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-book"></i> Documentación API</h4>
+  </div>
+
+  <div class="row g-4">
+    <!-- Auth -->
+    <div class="col-12">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-shield-lock text-warning"></i>
+          <span class="fw-bold">Autenticación</span>
+        </div>
+        <div class="card-body">
+          <table class="table table-dark table-sm table-borderless align-middle mb-0">
+            <thead>
+              <tr><th class="text-secondary" style="width:120px">Método</th><th class="text-secondary" style="width:240px">Endpoint</th><th class="text-secondary">Descripción</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge bg-info">POST</span></td>
+                <td><code class="text-light">/api/auth/login</code></td>
+                <td class="text-secondary">Iniciar sesión. Body: <code class="text-light">{"username":"...","password":"..."}</code></td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-info">POST</span></td>
+                <td><code class="text-light">/api/auth/logout</code></td>
+                <td class="text-secondary">Cerrar sesión</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-success">GET</span></td>
+                <td><code class="text-light">/api/me</code></td>
+                <td class="text-secondary">Obtener usuario autenticado</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="col-12">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-list-task text-info"></i>
+          <span class="fw-bold">Tareas</span>
+        </div>
+        <div class="card-body">
+          <table class="table table-dark table-sm table-borderless align-middle mb-0">
+            <thead>
+              <tr><th class="text-secondary" style="width:120px">Método</th><th class="text-secondary" style="width:240px">Endpoint</th><th class="text-secondary">Descripción</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge bg-success">GET</span></td>
+                <td><code class="text-light">/api/tasks</code></td>
+                <td class="text-secondary">Listar todas las tareas</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-success">GET</span></td>
+                <td><code class="text-light">/api/tasks/{id}</code></td>
+                <td class="text-secondary">Obtener una tarea por ID</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-warning text-dark">POST</span></td>
+                <td><code class="text-light">/api/tasks</code></td>
+                <td class="text-secondary">Crear una nueva tarea</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-primary">PUT</span></td>
+                <td><code class="text-light">/api/tasks/{id}</code></td>
+                <td class="text-secondary">Actualizar una tarea existente</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-danger">DEL</span></td>
+                <td><code class="text-light">/api/tasks/{id}</code></td>
+                <td class="text-secondary">Eliminar una tarea</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr class="border-secondary my-3">
+          <h6 class="text-secondary mb-2">Campos de una Tarea</h6>
+          <table class="table table-dark table-sm table-borderless align-middle mb-0">
+            <thead>
+              <tr><th class="text-secondary">Campo</th><th class="text-secondary">Tipo</th><th class="text-secondary">Descripción</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code class="text-light">name</code></td><td><code class="text-light">string</code></td><td class="text-secondary">Identificador único de la tarea</td></tr>
+              <tr><td><code class="text-light">label</code></td><td><code class="text-light">string</code></td><td class="text-secondary">Nombre visible en el frontend</td></tr>
+              <tr><td><code class="text-light">description</code></td><td><code class="text-light">string</code></td><td class="text-secondary">Descripción de la tarea</td></tr>
+              <tr><td><code class="text-light">script</code></td><td><code class="text-light">string</code></td><td class="text-secondary">URL HTTP o comando del sistema a ejecutar</td></tr>
+              <tr><td><code class="text-light">schedule_datetime</code></td><td><code class="text-light">string|null</code></td><td class="text-secondary">Fecha/hora ISO para ejecución programada</td></tr>
+              <tr><td><code class="text-light">recursive_timestamp</code></td><td><code class="text-light">int|null</code></td><td class="text-secondary">Intervalo en milisegundos para repetición</td></tr>
+              <tr><td><code class="text-light">expiration_datetime</code></td><td><code class="text-light">string|null</code></td><td class="text-secondary">Fecha de expiración de la tarea</td></tr>
+              <tr><td><code class="text-light">times_total</code></td><td><code class="text-light">int</code></td><td class="text-secondary">Número máximo de ejecuciones (0 = ilimitado)</td></tr>
+              <tr><td><code class="text-light">active</code></td><td><code class="text-light">bool</code></td><td class="text-secondary">Si la tarea está activa (1) o inactiva (0)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buffer / Planificador -->
+    <div class="col-12">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-calendar-event text-success"></i>
+          <span class="fw-bold">Planificador (Buffer)</span>
+        </div>
+        <div class="card-body">
+          <table class="table table-dark table-sm table-borderless align-middle mb-0">
+            <thead>
+              <tr><th class="text-secondary" style="width:120px">Método</th><th class="text-secondary" style="width:240px">Endpoint</th><th class="text-secondary">Descripción</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge bg-success">GET</span></td>
+                <td><code class="text-light">/api/tasks/{id}/buffer</code></td>
+                <td class="text-secondary">Obtener las ejecuciones planificadas de una tarea</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-primary">PUT</span></td>
+                <td><code class="text-light">/api/buffer/{id}/cancel</code></td>
+                <td class="text-secondary">Cancelar una ejecución pendiente</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trigger -->
+    <div class="col-12">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-lightning-fill text-warning"></i>
+          <span class="fw-bold">Trigger (Ejecución)</span>
+        </div>
+        <div class="card-body">
+          <table class="table table-dark table-sm table-borderless align-middle mb-0">
+            <thead>
+              <tr><th class="text-secondary" style="width:120px">Método</th><th class="text-secondary" style="width:240px">Endpoint</th><th class="text-secondary">Descripción</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge bg-warning text-dark">POST</span></td>
+                <td><code class="text-light">/api/trigger/{id}</code></td>
+                <td class="text-secondary">Forzar ejecución inmediata de una tarea</td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-warning text-dark">POST</span></td>
+                <td><code class="text-light">/api/trigger/batch</code></td>
+                <td class="text-secondary">Ejecutar múltiples tareas pendientes</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="col-12">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-clock-history text-info"></i>
+          <span class="fw-bold">Historial</span>
+        </div>
+        <div class="card-body">
+          <table class="table table-dark table-sm table-borderless align-middle mb-0">
+            <thead>
+              <tr><th class="text-secondary" style="width:120px">Método</th><th class="text-secondary" style="width:240px">Endpoint</th><th class="text-secondary">Descripción</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge bg-success">GET</span></td>
+                <td><code class="text-light">/api/history</code></td>
+                <td class="text-secondary">Obtener historial de ejecuciones</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health -->
+    <div class="col-12">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-heart-pulse text-success"></i>
+          <span class="fw-bold">Health</span>
+        </div>
+        <div class="card-body">
+          <table class="table table-dark table-sm table-borderless align-middle mb-0">
+            <thead>
+              <tr><th class="text-secondary" style="width:120px">Método</th><th class="text-secondary" style="width:240px">Endpoint</th><th class="text-secondary">Descripción</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge bg-success">GET</span></td>
+                <td><code class="text-light">/api/health</code></td>
+                <td class="text-secondary">Verificar estado del servidor</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- WebSocket -->
+    <div class="col-12">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-wifi text-primary"></i>
+          <span class="fw-bold">WebSocket</span>
+        </div>
+        <div class="card-body">
+          <p class="text-secondary mb-2">El servidor notifica eventos en tiempo real a través de WebSocket:</p>
+          <table class="table table-dark table-sm table-borderless align-middle mb-0">
+            <thead>
+              <tr><th class="text-secondary">Evento</th><th class="text-secondary">Descripción</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code class="text-light">task_fired</code></td><td class="text-secondary">Una tarea fue ejecutada</td></tr>
+              <tr><td><code class="text-light">buffer_updated</code></td><td class="text-secondary">El buffer de planificación se actualizó</td></tr>
+              <tr><td><code class="text-light">task_updated</code></td><td class="text-secondary">Una tarea fue creada, editada o eliminada</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Response Format -->
+    <div class="col-12">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-box-arrow-in-down text-secondary"></i>
+          <span class="fw-bold">Formato de Respuesta</span>
+        </div>
+        <div class="card-body">
+          <p class="text-secondary mb-2">Todas las respuestas siguen la misma estructura:</p>
+          <pre class="bg-black text-light p-3 rounded mb-0" style="font-size:0.85rem">{
+  "success": true,
+  "error": false,
+  "status": 200,
+  "code": 0,
+  "description": "ok",
+  "data": { ... }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ejemplos -->
+    <div class="col-12">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary d-flex align-items-center gap-2">
+          <i class="bi bi-code-slash text-primary"></i>
+          <span class="fw-bold">Ejemplos de Uso</span>
+        </div>
+        <div class="card-body">
+          <h6 class="text-secondary mb-2">Crear una tarea (curl)</h6>
+          <pre class="bg-black text-light p-3 rounded mb-3" style="font-size:0.85rem">curl -X POST http://localhost:3000/api/tasks \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -d '{
+    "name": "mi-tarea",
+    "label": "Mi Tarea",
+    "script": "http://localhost:4000/health/ping",
+    "schedule_datetime": null,
+    "recursive_timestamp": 300000,
+    "active": true
+  }'</pre>
+
+          <h6 class="text-secondary mb-2">Listar tareas</h6>
+          <pre class="bg-black text-light p-3 rounded mb-0" style="font-size:0.85rem">curl http://localhost:3000/api/tasks \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

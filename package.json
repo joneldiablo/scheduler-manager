@@ -1,8 +1,8 @@
 {
   "name": "scheduler-manager",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
-  "description": "The Alchemist - Agnostic Task Scheduler Orchestrator",
+  "description": "Scheduler Manager - Agnostic Task Scheduler Orchestrator",
   "workspaces": [
     "backend"
   ],
