@@ -25,6 +25,7 @@ export const appMethodsScheduler = {
           });
         }
       }
+      items.sort((a, b) => new Date(a.planned_at) - new Date(b.planned_at));
       this.bufferItems = items;
     } catch (e) {
       console.error('[Scheduler] Error loading buffer:', e.message);

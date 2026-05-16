@@ -81,10 +81,19 @@ export function createPlannerService(
             : new Date(task.updated_at || now);
 
           const interval = task.recursive_timestamp;
-          let cursor = new Date(origin.getTime() + Math.ceil((now.getTime() - origin.getTime()) / interval) * interval);
 
-          while (cursor >= now && cursor <= windowEnd) {
-            toInsert.push({ task_id: task.id!, planned_at: toSec(cursor), status: 'pending' });
+          const originMs = origin.getTime();
+          const nowMs = now.getTime();
+          const firstMs = originMs >= nowMs
+            ? originMs
+            : originMs + Math.ceil((nowMs - originMs) / interval) * interval;
+
+          let cursor = new Date(firstMs);
+
+          while (cursor <= windowEnd) {
+            if (cursor >= now) {
+              toInsert.push({ task_id: task.id!, planned_at: toSec(cursor), status: 'pending' });
+            }
             cursor = new Date(cursor.getTime() + interval);
           }
         }
