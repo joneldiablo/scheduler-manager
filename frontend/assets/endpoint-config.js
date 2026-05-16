@@ -46,6 +46,8 @@ window.EndpointConfig = (function () {
         "trigger-task": { url: "{base}/trigger/{id}", method: "POST" },
         "trigger-batch": { url: "{base}/trigger/batch", method: "POST" },
         "health": { url: "{base}/health", method: "GET" },
+        "list-history": { url: "{base}/history", method: "GET" },
+        "cancel-buffer": { url: "{base}/buffer/{id}/cancel", method: "PUT" },
       },
     },
   };

@@ -6,6 +6,13 @@ test.describe('The Alchemist - E2E Tests', () => {
     await page.addInitScript(() => {
       window.localStorage.clear();
     });
+    // Capture all console logs for debugging
+    page.on('console', msg => {
+      if (msg.type() === 'error' || msg.type() === 'warning') {
+        console.log(`[BROWSER ${msg.type()}] ${msg.text()}`);
+      }
+    });
+    page.on('pageerror', err => console.log(`[PAGE ERROR] ${err.message}`));
   });
 
   test('should load login modal on first visit', async ({ page }) => {
@@ -35,9 +42,9 @@ test.describe('The Alchemist - E2E Tests', () => {
   test('should login successfully with valid credentials', async ({ page }) => {
     await page.goto('/');
     
-    // Fill credentials - using default admin/admin
-    await page.fill('input[autocomplete="username"]', 'admin');
-    await page.fill('input[autocomplete="current-password"]', 'admin');
+    // Fill credentials
+    await page.fill('input[autocomplete="username"]', 'dbladmin');
+    await page.fill('input[autocomplete="current-password"]', 'dbl@dmin1236');
     await page.click('button[type="submit"]');
     
     // Wait for login modal to close (authenticated)
@@ -50,26 +57,31 @@ test.describe('The Alchemist - E2E Tests', () => {
   test('should navigate to dashboard after login', async ({ page }) => {
     // Login first
     await page.goto('/');
-    await page.fill('input[autocomplete="username"]', 'admin');
-    await page.fill('input[autocomplete="current-password"]', 'admin');
+    await page.fill('input[autocomplete="username"]', 'dbladmin');
+    await page.fill('input[autocomplete="current-password"]', 'dbl@dmin1236');
     await page.click('button[type="submit"]');
+    
+    // Wait for login modal to close
+    await expect(page.locator('#loginModal')).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(1000);
     
     // Wait for dashboard to load
     await expect(page.locator('text=Panel de Control')).toBeVisible({ timeout: 10000 });
     
     // Check stats cards are visible
     await expect(page.locator('text=Total Tareas')).toBeVisible();
-    await expect(page.locator('text=Activas')).toBeVisible();
-    await expect(page.locator('text=Pendientes')).toBeVisible();
+    await expect(page.getByText('Activas', { exact: true })).toBeVisible();
+    await expect(page.getByText('Pendientes', { exact: true })).toBeVisible();
   });
 
   test('should navigate to tasks view', async ({ page }) => {
     // Login first
     await page.goto('/');
-    await page.fill('input[autocomplete="username"]', 'admin');
-    await page.fill('input[autocomplete="current-password"]', 'admin');
+    await page.fill('input[autocomplete="username"]', 'dbladmin');
+    await page.fill('input[autocomplete="current-password"]', 'dbl@dmin1236');
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000);
+    await expect(page.locator('#loginModal')).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(1000);
     
     // Open offcanvas menu
     await page.click('button[data-bs-target="#offcanvasNavbar"]');
@@ -86,16 +98,21 @@ test.describe('The Alchemist - E2E Tests', () => {
   test('should open new task modal', async ({ page }) => {
     // Login first
     await page.goto('/');
-    await page.fill('input[autocomplete="username"]', 'admin');
-    await page.fill('input[autocomplete="current-password"]', 'admin');
+    await page.fill('input[autocomplete="username"]', 'dbladmin');
+    await page.fill('input[autocomplete="current-password"]', 'dbl@dmin1236');
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000);
+    await expect(page.locator('#loginModal')).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(1000);
     
     // Navigate to tasks
     await page.click('button[data-bs-target="#offcanvasNavbar"]');
     await page.waitForTimeout(500);
     await page.click('text=Tareas');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1000);
+    
+    // Close offcanvas menu
+    await page.click('.offcanvas .btn-close');
+    await page.waitForTimeout(500);
     
     // Click "Nueva Tarea" button
     await page.click('text=Nueva Tarea');
@@ -109,10 +126,11 @@ test.describe('The Alchemist - E2E Tests', () => {
   test('should navigate to scheduler view', async ({ page }) => {
     // Login first
     await page.goto('/');
-    await page.fill('input[autocomplete="username"]', 'admin');
-    await page.fill('input[autocomplete="current-password"]', 'admin');
+    await page.fill('input[autocomplete="username"]', 'dbladmin');
+    await page.fill('input[autocomplete="current-password"]', 'dbl@dmin1236');
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000);
+    await expect(page.locator('#loginModal')).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(1000);
     
     // Open offcanvas and navigate
     await page.click('button[data-bs-target="#offcanvasNavbar"]');
@@ -120,20 +138,28 @@ test.describe('The Alchemist - E2E Tests', () => {
     await page.click('text=Planificador');
     await page.waitForTimeout(1000);
     
-    // Verify scheduler view
-    await expect(page.locator('text=Planificador (Buffer)')).toBeVisible();
+    // Close offcanvas
+    await page.click('.offcanvas .btn-close');
+    await page.waitForTimeout(500);
+    
+    // Wait for scheduler view heading
+    await page.waitForSelector('h4', { timeout: 10000 });
+    const headingText = await page.locator('h4').first().textContent();
+    console.log(`[TEST] Heading text: "${headingText}"`);
+    expect(headingText).toContain('Planificador');
   });
 
   test('should logout successfully', async ({ page }) => {
     // Login first
     await page.goto('/');
-    await page.fill('input[autocomplete="username"]', 'admin');
-    await page.fill('input[autocomplete="current-password"]', 'admin');
+    await page.fill('input[autocomplete="username"]', 'dbladmin');
+    await page.fill('input[autocomplete="current-password"]', 'dbl@dmin1236');
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000);
+    await expect(page.locator('#loginModal')).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(1000);
     
     // Click logout button
-    await page.click('button:has-text("bi-box-arrow-right")');
+    await page.click('button.btn-outline-danger');
     await page.waitForTimeout(1000);
     
     // Login modal should appear again

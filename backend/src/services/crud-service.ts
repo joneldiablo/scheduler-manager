@@ -1,5 +1,5 @@
 import { Knex } from 'knex';
-import { Task, ExecutionBuffer } from '../types.js';
+import { Task, ExecutionBuffer, ExecutionHistory } from '../types.js';
 
 export interface CrudService {
   listTasks(options?: { active?: boolean; page?: number; limit?: number; search?: string }): Promise<{ data: Task[]; total: number }>;
@@ -9,7 +9,10 @@ export interface CrudService {
   deleteTask(id: number): Promise<boolean>;
   getBufferForTask(taskId: number): Promise<ExecutionBuffer[]>;
   cancelPendingExecutions(taskId: number): Promise<number>;
+  cancelBufferExecution(executionId: number): Promise<boolean>;
   createExecution(taskId: number, plannedAt: string): Promise<ExecutionBuffer>;
+  createHistory(data: { task_id: number; script: string; executed_at: string; duration: number; response: string }): Promise<ExecutionHistory>;
+  listHistory(options?: { task_id?: number; page?: number; limit?: number }): Promise<{ data: ExecutionHistory[]; total: number }>;
 }
 
 function mapTask(row: Record<string, unknown>): Task {
@@ -18,6 +21,10 @@ function mapTask(row: Record<string, unknown>): Task {
 
 function mapBuffer(row: Record<string, unknown>): ExecutionBuffer {
   return row as unknown as ExecutionBuffer;
+}
+
+function mapHistory(row: Record<string, unknown>): ExecutionHistory {
+  return row as unknown as ExecutionHistory;
 }
 
 export function createCrudService(db: Knex): CrudService {
@@ -123,6 +130,17 @@ export function createCrudService(db: Knex): CrudService {
       return count;
     },
 
+    async cancelBufferExecution(executionId) {
+      const row = await db('execution_buffer')
+        .select('*')
+        .where('id', executionId)
+        .where('status', 'pending')
+        .first();
+      if (!row) return false;
+      await db('execution_buffer').where('id', executionId).update({ status: 'cancelled' });
+      return true;
+    },
+
     async createExecution(taskId, plannedAt) {
       const now = new Date().toISOString();
       const [id] = await db('execution_buffer').insert({
@@ -133,6 +151,42 @@ export function createCrudService(db: Knex): CrudService {
       });
       const row = await db('execution_buffer').select('*').where('id', id).first();
       return mapBuffer(row!);
+    },
+
+    async createHistory(data) {
+      const now = new Date().toISOString();
+      const [id] = await db('execution_history').insert({
+        task_id: data.task_id,
+        script: data.script,
+        executed_at: data.executed_at,
+        duration: data.duration,
+        response: data.response ?? '',
+        created_at: now,
+      });
+      const row = await db('execution_history').select('*').where('id', id).first();
+      return mapHistory(row!);
+    },
+
+    async listHistory(options) {
+      const page = options?.page ?? 1;
+      const limit = options?.limit ?? 50;
+      const offset = (page - 1) * limit;
+
+      let query = db('execution_history')
+        .select('execution_history.*', db.raw('COALESCE(tasks.label, tasks.name) as task_name'))
+        .leftJoin('tasks', 'execution_history.task_id', 'tasks.id');
+
+      if (options?.task_id !== undefined) {
+        query = query.where('execution_history.task_id', options.task_id);
+      }
+
+      const countQuery = db('execution_history');
+      const totalResult = await (options?.task_id
+        ? countQuery.where('task_id', options.task_id).count({ count: '*' }).first()
+        : countQuery.count({ count: '*' }).first());
+
+      const rows = await query.orderBy('executed_at', 'desc').limit(limit).offset(offset);
+      return { data: rows.map(mapHistory), total: totalResult ? Number(totalResult.count) : 0 };
     },
   };
 }

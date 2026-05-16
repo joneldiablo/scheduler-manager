@@ -39,6 +39,12 @@ export const appState = {
   bufferLimit: 50,
   stats: { total: 0, active: 0, pending: 0, fired: 0, cancelled: 0 },
 
+  // History
+  historyItems: [],
+  historyTotal: 0,
+  historyPage: 1,
+  historyLimit: 50,
+
   // WebSocket
   wsConnected: false,
   wsConnection: null,

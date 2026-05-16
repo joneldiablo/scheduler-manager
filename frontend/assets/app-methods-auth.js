@@ -72,7 +72,11 @@ export const appMethodsAuth = {
   },
 
   closeLoginModal() {
-    if (this.loginModal) this.loginModal.hide();
+    if (this.loginModal) {
+      this.loginModal.hide();
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+    }
   },
 
   saveSession(token, user) {
@@ -204,13 +208,17 @@ export const appMethodsAuth = {
   },
 
   handleWsEvent(msg) {
-    const { event, data } = msg;
-    console.log(`[WS Event] ${event}`, data);
+    const event = msg.type || msg.event;
+    const payload = msg.payload || msg.data || {};
+    console.log(`[WS Event] ${event}`, payload);
     
     switch (event) {
       case 'task_fired':
         if (this.refreshTasks) this.refreshTasks();
-        this.showToast(`Tarea disparada: ${data.name}`, 'info');
+        if (this.activeView === 'scheduler' && this.refreshBuffer) {
+          this.refreshBuffer();
+        }
+        this.showToast(`Tarea disparada: ${payload.name || payload.taskId}`, 'info');
         break;
       case 'buffer_updated':
         if (this.activeView === 'scheduler' && this.refreshBuffer) {

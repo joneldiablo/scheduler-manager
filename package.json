@@ -11,5 +11,8 @@
     "serve": "npm run serve -w backend",
     "typecheck": "npm run typecheck -w backend",
     "test": "npm run test -w backend"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }

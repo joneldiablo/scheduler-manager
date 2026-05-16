@@ -4,6 +4,7 @@ import { appMethodsAuth } from './app-methods-auth.js';
 import { appMethodsUI } from './app-methods-ui.js';
 import { appMethodsTasks } from './app-methods-tasks.js';
 import { appMethodsScheduler } from './app-methods-scheduler.js';
+import { appMethodsHistory } from './app-methods-history.js';
 
 const _origConsole = { ...console };
 const _logStore = [];
@@ -60,6 +61,7 @@ const app = Vue.createApp({
     ...appMethodsUI,
     ...appMethodsTasks,
     ...appMethodsScheduler,
+    ...appMethodsHistory,
   },
   async mounted() {
     console.log("[The Alchemist] App mounted");
@@ -121,8 +123,9 @@ window.__openLogModal = () => {
   }
 };
 
+const fragmentHtmlStore = {};
 async function loadFragments() {
-  const fragments = ['dashboard', 'tasks', 'scheduler'];
+  const fragments = ['dashboard', 'tasks', 'scheduler', 'history'];
   console.log("[The Alchemist] Loading fragments...");
   
   try {
@@ -130,19 +133,16 @@ async function loadFragments() {
       const response = await fetch(`assets/fragments/${name}.html`);
       if (!response.ok) throw new Error(`Failed to load ${name}.html`);
       const html = await response.text();
-      const tpl = document.getElementById(`tpl-${name}`);
-      if (tpl) {
-        tpl.innerHTML = html;
-      } else {
-        console.error(`Template tpl-${name} not found in DOM`);
-      }
+      fragmentHtmlStore[name] = html;
     }));
-    console.log("[The Alchemist] All fragments loaded into templates.");
+    console.log("[The Alchemist] All fragments loaded.");
   } catch (e) {
     console.error("[The Alchemist] Error loading fragments:", e);
-    // We continue anyway to let the app mount, but some views might be empty
   }
 }
+window.__fragmentStore = fragmentHtmlStore;
+
+window.vueApp = app;
 
 (async function init() {
   await loadFragments();

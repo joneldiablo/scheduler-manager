@@ -141,4 +141,47 @@ export function registerTaskRoutes(router: Router, config: AppConfig, crud: Crud
       });
     }
   });
+
+  router.put('/buffer/:id/cancel', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const cancelled = await crud.cancelBufferExecution(id);
+
+      if (!cancelled) {
+        res.status(404).json({
+          success: false, error: true, status: 404, code: 0, description: 'not-found',
+        });
+        return;
+      }
+
+      res.json({
+        success: true, error: false, status: 200, code: 0, description: 'cancelled',
+      });
+    } catch {
+      res.status(500).json({
+        success: false, error: true, status: 500, code: 0, description: 'internal-error',
+      });
+    }
+  });
+
+  router.get('/history', async (req: Request, res: Response) => {
+    try {
+      const { task_id, page, limit } = req.query;
+      const options: { task_id?: number; page?: number; limit?: number } = {};
+      if (task_id !== undefined) options.task_id = parseInt(task_id as string, 10);
+      if (page !== undefined) options.page = Math.max(1, parseInt(page as string, 10) || 1);
+      if (limit !== undefined) options.limit = Math.max(1, parseInt(limit as string, 10) || 50);
+
+      const result = await crud.listHistory(options);
+
+      res.json({
+        success: true, error: false, status: 200, code: 0, description: 'ok',
+        data: { items: result.data, total: result.total },
+      });
+    } catch {
+      res.status(500).json({
+        success: false, error: true, status: 500, code: 0, description: 'internal-error',
+      });
+    }
+  });
 }

@@ -47,6 +47,9 @@ export async function createApp(config: AppConfig): Promise<AppContext> {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true }));
 
+  registerHealthRoutes(app, config);
+  registerAuthRoutes(app, config, auth);
+
   if (config.ENABLE_FRONTEND) {
     const possiblePaths = [
       path.resolve(process.cwd(), '../frontend'),
@@ -70,11 +73,8 @@ export async function createApp(config: AppConfig): Promise<AppContext> {
 
   const server = http.createServer(app);
   const ws = createWsServer(server, config, auth);
-  const trigger = createTriggerService(db, ws, crud);
+  const trigger = createTriggerService(db, ws, crud, config.ENV);
   const planner = createPlannerService(db, ws, trigger, config);
-
-  registerHealthRoutes(app, config);
-  registerAuthRoutes(app, config, auth);
 
   const apiRouter = express.Router();
   apiRouter.use(createAuthMiddleware(config, auth));

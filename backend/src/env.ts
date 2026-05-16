@@ -19,6 +19,7 @@ export interface AppConfig {
   SQLITE_FILENAME: string;
   PLANNER_CRON: string;
   SEED_ON_BOOTSTRAP: boolean;
+  ENV: string;
 }
 
 export function loadAppConfig(overrides?: Partial<AppConfig>): AppConfig {
@@ -35,6 +36,7 @@ export function loadAppConfig(overrides?: Partial<AppConfig>): AppConfig {
     SQLITE_FILENAME: process.env.SQLITE_FILENAME || 'db.sqlite',
     PLANNER_CRON: process.env.PLANNER_CRON || '*/5 * * * *',
     SEED_ON_BOOTSTRAP: process.env.SEED_ON_BOOTSTRAP === 'true',
+    ENV: process.env.ENV || 'development',
   };
 
   if (overrides) {

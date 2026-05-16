@@ -51,8 +51,20 @@ export interface AuthPayload {
 
 export interface PlannerResult {
   inserted: number;
+  cleaned: number;
   window_start: string;
   window_end: string;
+}
+
+export interface ExecutionHistory {
+  id?: number;
+  task_id: number;
+  task_name?: string;
+  script: string;
+  executed_at: string;
+  duration: number;
+  response: string;
+  created_at: string;
 }
 
 export interface TriggerResult {

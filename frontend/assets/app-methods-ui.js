@@ -59,6 +59,8 @@ export const appMethodsUI = {
       if (this.refreshBuffer) await this.refreshBuffer();
     } else if (view === 'dashboard') {
       if (this.refreshStats) await this.refreshStats();
+    } else if (view === 'history') {
+      if (this.refreshHistory) await this.refreshHistory();
     }
   },
 
@@ -72,16 +74,16 @@ export const appMethodsUI = {
         return;
       }
 
-      // Get template from DOM (templates are loaded once at startup)
-      const tplEl = document.getElementById(`tpl-${name}`);
-      if (!tplEl) {
-        throw new Error(`Template not found: tpl-${name}`);
+      // Get template HTML from store (loaded before Vue mount)
+      const html = window.__fragmentStore && window.__fragmentStore[name];
+      if (!html) {
+        throw new Error(`Fragment not found in store: ${name}`);
       }
       
-      // Register component using the DOM template
+      // Register component using the stored HTML
       if (window.vueApp) {
         window.vueApp.component(componentName, {
-          template: tplEl.innerHTML
+          template: html
         });
       }
       
@@ -95,7 +97,7 @@ export const appMethodsUI = {
 
 
   async loadAllFragments() {
-    const views = ['dashboard', 'tasks', 'scheduler'];
+    const views = ['dashboard', 'tasks', 'scheduler', 'history'];
     await Promise.all(views.map(v => this.loadFragment(v)));
   },
 

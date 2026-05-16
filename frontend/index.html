@@ -50,6 +50,10 @@
              :class="{ active: activeView === 'scheduler' }" @click.prevent="navigateTo('scheduler')">
             <i class="bi bi-calendar-event me-2"></i> Planificador
           </a>
+          <a href="#" class="list-group-item list-group-item-action bg-dark text-light border-secondary py-3" 
+             :class="{ active: activeView === 'history' }" @click.prevent="navigateTo('history')">
+            <i class="bi bi-clock-history me-2"></i> Historial
+          </a>
         </div>
         <div class="mt-auto p-3 border-top border-secondary">
           <div class="d-flex align-items-center gap-2 small text-secondary">
@@ -72,11 +76,6 @@
         <i class="bi bi-trash"></i> Clear Cache
       </button>
     </div>
-
-    <!-- Fragment Templates (hidden, loaded once at startup) -->
-    <template id="tpl-dashboard"></template>
-    <template id="tpl-tasks"></template>
-    <template id="tpl-scheduler"></template>
 
     <!-- Main Content -->
     <div class="container-fluid p-3" v-if="isAuthenticated">
@@ -107,6 +106,63 @@
                 Ingresar
               </button>
             </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Form Modal -->
+    <div class="modal fade" id="taskFormModal" tabindex="-1" data-bs-backdrop="static">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content bg-dark border-secondary">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title">
+              <i class="bi" :class="selectedTask ? 'bi-pencil-square' : 'bi-plus-square'"></i>
+              {{ selectedTask ? 'Editar Tarea' : 'Nueva Tarea' }}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="selectedTask ? updateTask(selectedTask.id) : createTask()">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small">Nombre *</label>
+                  <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" v-model="taskForm.name" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small">Etiqueta</label>
+                  <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" v-model="taskForm.label">
+                </div>
+                <div class="col-12">
+                  <label class="form-label small">Descripción</label>
+                  <textarea class="form-control form-control-sm bg-dark text-light border-secondary" rows="2" v-model="taskForm.description"></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small">Programar fecha/hora</label>
+                  <input type="datetime-local" class="form-control form-control-sm bg-dark text-light border-secondary" v-model="taskForm.schedule_datetime">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small">Intervalo recursivo (ms)</label>
+                  <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary" v-model.number="taskForm.recursive_timestamp" min="0" step="1000">
+                </div>
+                <div class="col-md-6">
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="taskActive" v-model="taskForm.active">
+                    <label class="form-check-label small" for="taskActive">Activa</label>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label small">Script / Acción</label>
+                  <textarea class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" rows="4" v-model="taskForm.script" placeholder="URL o comando a ejecutar..."></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary btn-sm" @click="selectedTask ? updateTask(selectedTask.id) : createTask()">
+              <i class="bi bi-check-lg"></i> {{ selectedTask ? 'Actualizar' : 'Crear' }}
+            </button>
           </div>
         </div>
       </div>

@@ -7,8 +7,8 @@ export const appMethodsTasks = {
       const result = await response.json();
       
       if (result.success) {
-        this.tasks = result.data;
-        this.tasksTotal = result.total || result.data.length;
+        this.tasks = result.data?.tasks || result.data || [];
+        this.tasksTotal = result.data?.total || result.total || this.tasks.length;
       }
     } catch (e) {
       this.showError(`Error cargando tareas: ${e.message}`);

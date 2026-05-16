@@ -53,6 +53,34 @@ export async function runMigrations(database: Knex): Promise<void> {
     await database.raw('CREATE INDEX IF NOT EXISTS idx_buffer_planned ON execution_buffer(planned_at)');
     await database.raw('CREATE INDEX IF NOT EXISTS idx_tasks_active ON tasks(active)');
   }
+
+  const hasUniqueOnBuffer = await database.raw(
+    "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_buffer_unique'"
+  );
+  if (!hasUniqueOnBuffer || !hasUniqueOnBuffer.length) {
+    await database.raw(`
+      DELETE FROM execution_buffer WHERE id NOT IN (
+        SELECT MIN(id) FROM execution_buffer GROUP BY task_id, substr(planned_at, 1, 19)
+      )
+    `);
+    await database.raw('CREATE UNIQUE INDEX IF NOT EXISTS idx_buffer_unique ON execution_buffer(task_id, planned_at)');
+  }
+
+  const hasHistory = await database.schema.hasTable('execution_history');
+  if (!hasHistory) {
+    await database.schema.createTable('execution_history', (table) => {
+      table.increments('id').primary();
+      table.integer('task_id').notNullable().references('id').inTable('tasks').onDelete('CASCADE');
+      table.text('script').notNullable();
+      table.text('executed_at').notNullable();
+      table.integer('duration').notNullable().defaultTo(0);
+      table.text('response').defaultTo('');
+      table.text('created_at').defaultTo(database.fn.now());
+    });
+
+    await database.raw('CREATE INDEX IF NOT EXISTS idx_history_task ON execution_history(task_id)');
+    await database.raw('CREATE INDEX IF NOT EXISTS idx_history_executed ON execution_history(executed_at)');
+  }
 }
 
 export async function seedDemoData(database: Knex): Promise<void> {

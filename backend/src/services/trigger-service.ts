@@ -11,11 +11,37 @@ export interface TriggerService {
   resetAndReload(): Promise<void>;
 }
 
+const HTTP_METHOD_RE = /^(GET|POST|PUT|PATCH|DELETE)\s+(https?:\/\/\S+)/;
+
+function parseHttpScript(script: string): { method: string; url: string; headers?: Record<string, string>; body?: unknown } | null {
+  const lines = script.trim().split('\n');
+  const firstLine = lines[0].trim();
+  const m = firstLine.match(HTTP_METHOD_RE);
+  if (!m) return null;
+  const method = m[1];
+  const url = m[2];
+  let headers: Record<string, string> | undefined;
+  let body: unknown;
+  if (lines.length > 1) {
+    const rest = lines.slice(1).join('\n').trim();
+    try {
+      const parsed = JSON.parse(rest);
+      if (parsed.headers && typeof parsed.headers === 'object') headers = parsed.headers;
+      if (parsed.body !== undefined) body = parsed.body;
+    } catch {
+      // ignore invalid JSON
+    }
+  }
+  return { method, url, headers, body };
+}
+
 export function createTriggerService(
   db: Knex,
   ws: WsService,
-  crud: CrudService
+  crud: CrudService,
+  env?: string
 ): TriggerService {
+  const isProd = env === 'PROD';
   const activeTimeouts = new Map<number, NodeJS.Timeout>();
 
   const trigger: TriggerService = {
@@ -26,6 +52,7 @@ export function createTriggerService(
         .where('planned_at', '>', now);
 
       for (const entry of entries) {
+        if (activeTimeouts.has(entry.id!)) continue;
         const delay = new Date(entry.planned_at).getTime() - Date.now();
         if (delay <= 0) {
           trigger.fireTask(entry.id!).catch((err) => {
@@ -62,17 +89,71 @@ export function createTriggerService(
         return { task_id: task.id!, execution_id: executionId, planned_at: execution.planned_at, fired_at: firedAt };
       }
 
-      if (task.script.startsWith('http')) {
-        fetch(task.script, { method: 'POST' }).catch((err) => {
-          console.error(`[Trigger] HTTP POST failed [${task.name}]: ${task.script}`, err);
-        });
-      } else {
-        exec(task.script, (err) => {
-          if (err) {
-            console.error(`[Trigger] Shell exec failed [${task.name}]: ${task.script}`, err);
+      let execResponse = '';
+      const execStart = Date.now();
+
+      const parsed = parseHttpScript(task.script);
+      if (parsed) {
+        const { method, url, headers, body } = parsed;
+        const fetchOpts: RequestInit = { method, headers: headers as Record<string, string> | undefined };
+        if (body !== undefined) fetchOpts.body = JSON.stringify(body);
+        try {
+          const response = await fetch(url, fetchOpts);
+          const text = await response.text();
+          execResponse = `${response.status} ${(text || '').slice(0, 1000)}`;
+          if (!isProd) {
+            console.log(`[Trigger] ${method} ${task.name} -> ${url}`);
+            console.log(`[Trigger] Response ${response.status}: ${(text || '').slice(0, 500)}`);
           }
-        });
+        } catch (err: any) {
+          execResponse = `Error: ${err.message}`;
+          console.error(`[Trigger] ${method} failed [${task.name}]: ${url}`, err);
+        }
+      } else if (task.script.startsWith('http')) {
+        try {
+          const response = await fetch(task.script, { method: 'POST' });
+          const text = await response.text();
+          execResponse = `${response.status} ${(text || '').slice(0, 1000)}`;
+          if (!isProd) {
+            console.log(`[Trigger] HTTP ${task.name} -> ${task.script}`);
+            console.log(`[Trigger] Response ${response.status}: ${(text || '').slice(0, 500)}`);
+          }
+        } catch (err: any) {
+          execResponse = `Error: ${err.message}`;
+          console.error(`[Trigger] HTTP POST failed [${task.name}]: ${task.script}`, err);
+        }
+      } else {
+        try {
+          const result = await new Promise<{ err: Error | null; stdout: string; stderr: string }>((resolve) => {
+            exec(task.script, (err, stdout, stderr) => resolve({ err, stdout, stderr }));
+          });
+          if (result.err) {
+            execResponse = `Error: ${result.err.message}`;
+            console.error(`[Trigger] Shell exec failed [${task.name}]: ${task.script}`, result.err);
+          } else {
+            execResponse = (result.stdout + result.stderr).trim().slice(0, 1000);
+          }
+          if (!isProd) {
+            console.log(`[Trigger] EXEC ${task.name} -> ${task.script}`);
+            if (result.stdout) console.log(`[Trigger] stdout: ${result.stdout.trim().slice(0, 500)}`);
+            if (result.stderr) console.log(`[Trigger] stderr: ${result.stderr.trim().slice(0, 500)}`);
+          }
+        } catch (err: any) {
+          execResponse = `Error: ${err.message}`;
+          console.error(`[Trigger] Shell exec failed [${task.name}]: ${task.script}`, err);
+        }
       }
+
+      const execDuration = Date.now() - execStart;
+
+      await db('execution_history').insert({
+        task_id: task.id,
+        script: task.script,
+        executed_at: firedAt,
+        duration: execDuration,
+        response: execResponse.slice(0, 2000),
+        created_at: new Date().toISOString(),
+      });
 
       await db('execution_buffer').where('id', executionId).update({ status: 'fired' });
 
@@ -82,41 +163,7 @@ export function createTriggerService(
         last_ejecution_datetime: firedAt,
       });
 
-      if (task.recursive_timestamp && task.recursive_timestamp > 0) {
-        let shouldReplan = true;
-
-        if (task.expiration_datetime && now >= new Date(task.expiration_datetime)) {
-          shouldReplan = false;
-        }
-        if (task.times_total > 0 && newTimesCalled >= task.times_total) {
-          shouldReplan = false;
-        }
-
-        if (shouldReplan) {
-          const nextPlannedAt = new Date(now.getTime() + task.recursive_timestamp);
-          const nextPlannedISO = nextPlannedAt.toISOString();
-          const [newId] = await db('execution_buffer').insert({
-            task_id: task.id,
-            planned_at: nextPlannedISO,
-            status: 'pending',
-          });
-
-          const delay = nextPlannedAt.getTime() - Date.now();
-          if (delay > 0) {
-            const timeout = setTimeout(() => {
-              trigger.fireTask(newId).catch((err) => {
-                console.error(`[Trigger] Error firing recursive task ${newId}:`, err);
-              });
-              activeTimeouts.delete(newId);
-            }, delay);
-            activeTimeouts.set(newId, timeout);
-          } else {
-            trigger.fireTask(newId).catch((err) => {
-              console.error(`[Trigger] Error firing recursive task ${newId}:`, err);
-            });
-          }
-        }
-      }
+      // Recursive scheduling handled entirely by the planner (every 5 min cycle)
 
       ws.broadcast({
         type: 'task_fired',

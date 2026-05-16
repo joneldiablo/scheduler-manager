@@ -89,7 +89,11 @@ describe('runMigrations', () => {
     expect(mockRaw).toHaveBeenCalledWith('CREATE INDEX IF NOT EXISTS idx_buffer_status ON execution_buffer(status)');
     expect(mockRaw).toHaveBeenCalledWith('CREATE INDEX IF NOT EXISTS idx_buffer_planned ON execution_buffer(planned_at)');
     expect(mockRaw).toHaveBeenCalledWith('CREATE INDEX IF NOT EXISTS idx_tasks_active ON tasks(active)');
-    expect(mockRaw).toHaveBeenCalledTimes(3);
+    expect(mockRaw).toHaveBeenCalledWith('CREATE INDEX IF NOT EXISTS idx_history_task ON execution_history(task_id)');
+    expect(mockRaw).toHaveBeenCalledWith('CREATE INDEX IF NOT EXISTS idx_history_executed ON execution_history(executed_at)');
+    expect(mockRaw).toHaveBeenCalledWith(expect.stringContaining('DELETE FROM execution_buffer'));
+    expect(mockRaw).toHaveBeenCalledWith('CREATE UNIQUE INDEX IF NOT EXISTS idx_buffer_unique ON execution_buffer(task_id, planned_at)');
+    expect(mockRaw).toHaveBeenCalledTimes(8);
   });
 
   it('skips creating tables if they already exist', async () => {
@@ -99,18 +103,22 @@ describe('runMigrations', () => {
     expect(mockSchema.hasTable).toHaveBeenCalledWith('tasks');
     expect(mockSchema.hasTable).toHaveBeenCalledWith('execution_buffer');
     expect(mockSchema.createTable).not.toHaveBeenCalled();
-    expect(mockRaw).not.toHaveBeenCalled();
+    expect(mockRaw).toHaveBeenCalledWith(expect.stringContaining('SELECT name FROM sqlite_master'));
+    expect(mockRaw).toHaveBeenCalledWith(expect.stringContaining('DELETE FROM execution_buffer'));
+    expect(mockRaw).toHaveBeenCalledWith('CREATE UNIQUE INDEX IF NOT EXISTS idx_buffer_unique ON execution_buffer(task_id, planned_at)');
+    expect(mockRaw).toHaveBeenCalledTimes(3);
   });
 
   it('creates only execution_buffer when tasks exists but buffer does not', async () => {
     mockSchema.hasTable
       .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(false);
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
     const db = getDatabase(config);
     await runMigrations(db);
     expect(mockSchema.createTable).toHaveBeenCalledTimes(1);
     expect(mockSchema.createTable).toHaveBeenCalledWith('execution_buffer', expect.any(Function));
-    expect(mockRaw).toHaveBeenCalledTimes(3);
+    expect(mockRaw).toHaveBeenCalledTimes(6);
   });
 
   it('passes correct column definitions to tasks table builder', async () => {

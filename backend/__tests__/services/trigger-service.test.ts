@@ -38,7 +38,7 @@ describe('TriggerService', () => {
   }
 
   function createMockQueryBuilder(overrides: Record<string, any> = {}) {
-    return {
+    const qb: Record<string, any> = {
       select: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       whereIn: jest.fn().mockReturnThis(),
@@ -58,8 +58,10 @@ describe('TriggerService', () => {
       then: jest.fn().mockImplementation((resolve: (v: unknown) => void) => resolve([])),
       catch: jest.fn(),
       finally: jest.fn(),
+      onConflict: jest.fn().mockReturnValue({ ignore: jest.fn().mockReturnThis() }),
       ...overrides,
     };
+    return qb;
   }
 
   beforeEach(() => {
@@ -86,9 +88,13 @@ describe('TriggerService', () => {
     };
 
     originalFetch = global.fetch;
-    global.fetch = jest.fn().mockResolvedValue({ ok: true }) as any;
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, text: () => Promise.resolve('ok') }) as any;
 
-    trigger = createTriggerService(mockDb as any, mockWs as any, mockCrud as any);
+    mockExec.mockImplementation((_cmd: string, cb: (err: Error | null, stdout: string, stderr: string) => void) => {
+      cb(null, 'stdout output', '');
+    });
+
+    trigger = createTriggerService(mockDb as any, mockWs as any, mockCrud as any, 'development');
   });
 
   afterEach(() => {
@@ -145,7 +151,42 @@ describe('TriggerService', () => {
       expect(result.task_id).toBe(1);
     });
 
-    it('fires HTTP script with fetch POST', async () => {
+    it('fires HTTP script with new METHOD URL format (GET)', async () => {
+      mockDb().first = jest.fn()
+        .mockResolvedValueOnce(makeExecution())
+        .mockResolvedValueOnce(makeTask({ script: 'GET http://localhost/webhook' }));
+
+      await trigger.fireTask(1);
+      expect(global.fetch).toHaveBeenCalledWith('http://localhost/webhook', { method: 'GET' });
+    });
+
+    it('fires HTTP script with new METHOD URL format and body', async () => {
+      const script = 'POST http://localhost/api\n{"body":{"cucharas":4}}';
+      mockDb().first = jest.fn()
+        .mockResolvedValueOnce(makeExecution())
+        .mockResolvedValueOnce(makeTask({ script }));
+
+      await trigger.fireTask(1);
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost/api',
+        { method: 'POST', headers: undefined, body: JSON.stringify({ cucharas: 4 }) }
+      );
+    });
+
+    it('fires HTTP script with new METHOD URL format, headers and body', async () => {
+      const script = 'PUT http://localhost/api\n{"headers":{"X-Api-Key":"secret"},"body":{"id":1}}';
+      mockDb().first = jest.fn()
+        .mockResolvedValueOnce(makeExecution())
+        .mockResolvedValueOnce(makeTask({ script }));
+
+      await trigger.fireTask(1);
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost/api',
+        { method: 'PUT', headers: { 'X-Api-Key': 'secret' }, body: JSON.stringify({ id: 1 }) }
+      );
+    });
+
+    it('falls back to bare http URL (POST) for legacy format', async () => {
       mockDb().first = jest.fn()
         .mockResolvedValueOnce(makeExecution())
         .mockResolvedValueOnce(makeTask({ script: 'http://localhost/webhook' }));
@@ -215,7 +256,7 @@ describe('TriggerService', () => {
 
       await trigger.fireTask(1);
       const insertCalls = mockDb().insert.mock.calls.filter(
-        (c: any[]) => c[0] && typeof c[0] === 'object' && c[0].task_id
+        (c: any[]) => c[0] && typeof c[0] === 'object' && c[0].planned_at
       );
       expect(insertCalls.length).toBe(0);
     });
@@ -231,7 +272,7 @@ describe('TriggerService', () => {
 
       await trigger.fireTask(1);
       const insertCalls = mockDb().insert.mock.calls.filter(
-        (c: any[]) => c[0] && typeof c[0] === 'object' && c[0].task_id
+        (c: any[]) => c[0] && typeof c[0] === 'object' && c[0].planned_at
       );
       expect(insertCalls.length).toBe(0);
     });
