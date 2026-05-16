@@ -160,8 +160,13 @@
                   <textarea class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" rows="4" v-model="taskForm.script" placeholder="URL o comando a ejecutar..."></textarea>
                   <div class="small text-secondary mt-2">
                     <i class="bi bi-info-circle"></i>
-                    Para una <strong>consulta HTTP</strong> pon la URL completa: <code class="text-light">http://localhost:4000/health/ping</code><br>
-                    Para un <strong>comando del sistema</strong> pon la ruta del ejecutable: <code class="text-light">/usr/local/bin/backup-db.sh</code>
+                    <strong>HTTP</strong> — método y URL en la primera línea, JSON opcional con headers/body:<br>
+                    <code class="text-light">POST http://localhost:4000/api/data</code><br>
+                    <code class="text-light">{"headers":{"X-API-Key":"abc"},"body":{"key":"value"}}</code><br>
+                    <span class="text-secondary">Métodos soportados: <code class="text-light">GET</code> <code class="text-light">POST</code> <code class="text-light">PUT</code> <code class="text-light">PATCH</code> <code class="text-light">DELETE</code></span><br>
+                    Si solo pones una URL (sin método), se ejecutará como <code class="text-light">POST</code>.<br>
+                    <strong>Comando</strong> — ruta del ejecutable:<br>
+                    <code class="text-light">/usr/local/bin/backup-db.sh</code>
                   </div>
                 </div>
               </div>
